@@ -50,6 +50,7 @@ dependencies {
     implementation(libs.ui.tooling.preview)
     implementation(libs.androidx.datastore.preferences.core)
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.datastore.preferences.v100)
     debugImplementation(libs.ui.tooling)
 
     // Navigation Compose
@@ -78,4 +79,6 @@ dependencies {
     // okthttp
     implementation(libs.okhttp)
     implementation(libs.logging.interceptor)
+
+
 }
