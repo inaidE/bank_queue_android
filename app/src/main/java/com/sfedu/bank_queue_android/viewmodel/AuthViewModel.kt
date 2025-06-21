@@ -5,6 +5,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sfedu.bank_queue_android.model.AuthRequest
+import com.sfedu.bank_queue_android.network.RemoteDataSource
 import com.sfedu.bank_queue_android.repository.AuthRepository
 import com.sfedu.bank_queue_android.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,22 +24,27 @@ sealed class AuthUiState {
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val authRepo: AuthRepository,
-    private val userRepo: UserRepository
+    private val userRepo: UserRepository,
+    private val remote: RemoteDataSource
 ) : ViewModel() {
 
     /** Текущее состояние UI */
-    var uiState: AuthUiState by mutableStateOf(AuthUiState.Idle)
+    var uiState by mutableStateOf<AuthUiState>(AuthUiState.Idle)
         private set
 
-    /** Вход (логин) */
     fun login(username: String, password: String) {
         viewModelScope.launch {
             uiState = AuthUiState.Loading
-            authRepo.login(username, password)
-                .fold(
-                    onSuccess = { uiState = AuthUiState.Success },
-                    onFailure = { uiState = AuthUiState.Error(it.message ?: "Ошибка авторизации") }
-                )
+            runCatching {
+                val resp = remote.login(AuthRequest(username, password))
+                // СОХРАНЯЕМ токен сразу
+                authRepo.login(username, password) // <- теперь ваша реализация возвращает токен
+                resp.token
+            }.onSuccess { token ->
+                uiState = AuthUiState.Success
+            }.onFailure {
+                uiState = AuthUiState.Error(it.message ?: "Ошибка")
+            }
         }
     }
 

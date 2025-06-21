@@ -1,5 +1,6 @@
 package com.sfedu.bank_queue_android.util
 
+import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -22,17 +23,16 @@ class AuthInterceptor @Inject constructor(
     override fun intercept(chain: Interceptor.Chain): Response {
         val token = runBlocking {
             dataStore.data
-                .map { prefs -> prefs[stringPreferencesKey("token_key")] }
+                .map { prefs -> prefs[stringPreferencesKey("auth_token")] }
                 .firstOrNull()
         }
-
+        Log.d("AuthInterceptor", "Got token = $token")
         val request = chain.request().newBuilder()
             .apply {
                 if (!token.isNullOrBlank()) {
                     header("Authorization", "Bearer $token")
                 }
             }.build()
-
         return chain.proceed(request)
     }
 }

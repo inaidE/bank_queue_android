@@ -4,12 +4,8 @@ import kotlinx.coroutines.flow.Flow
 
 /** Интерфейс для авторизации и управления токеном */
 interface AuthRepository {
-    /** Авторизовать пользователя и сохранить токен */
-    suspend fun login(username: String, password: String): Result<Unit>
-
-    /** Удалить локально сохранённый токен (logout) */
+    /** Авторизовать и вернуть токен */
+    suspend fun login(username: String, password: String): Result<String>
     suspend fun logout(): Result<Unit>
-
-    /** Получить текущий токен, если есть */
     fun getToken(): Flow<String?>
 }

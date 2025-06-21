@@ -22,17 +22,18 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
 
     val uiState = viewModel.uiState
+
+    // Реагируем на смену состояния: при Success зовём onSuccess()
     LaunchedEffect(uiState) {
         if (uiState is AuthUiState.Success) {
-            nav.navigate("tickets") {
-                popUpTo("login") { inclusive = true }
-            }
+            onSuccess()
         }
     }
 
     Column(Modifier.padding(16.dp)) {
         Text("Login", style = MaterialTheme.typography.titleLarge)
         Spacer(Modifier.height(8.dp))
+
         OutlinedTextField(
             value = login,
             onValueChange = { login = it },
@@ -40,7 +41,9 @@ fun LoginScreen(
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
+
         Spacer(Modifier.height(8.dp))
+
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
@@ -50,10 +53,13 @@ fun LoginScreen(
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
+
         Spacer(Modifier.height(16.dp))
+
         Button(
             onClick = { viewModel.login(login, password) },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            enabled = uiState !is AuthUiState.Loading
         ) {
             if (uiState is AuthUiState.Loading) {
                 CircularProgressIndicator(modifier = Modifier.size(24.dp))
@@ -61,11 +67,19 @@ fun LoginScreen(
                 Text("Sign In")
             }
         }
-        uiState.takeIf { it is AuthUiState.Error }?.let {
+
+        // Ошибка, если есть
+        if (uiState is AuthUiState.Error) {
             Spacer(Modifier.height(8.dp))
-            Text((it as AuthUiState.Error).message, color = MaterialTheme.colorScheme.error)
+            Text(
+                text = uiState.message,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
+
         Spacer(Modifier.height(16.dp))
+
         TextButton(onClick = { nav.navigate("register") }) {
             Text("Don't have an account? Register")
         }

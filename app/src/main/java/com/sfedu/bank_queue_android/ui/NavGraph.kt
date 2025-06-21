@@ -22,6 +22,8 @@ import com.sfedu.bank_queue_android.ui.ticket.TicketDetailScreen
 import com.sfedu.bank_queue_android.ui.ticket.TicketListScreen
 import kotlinx.coroutines.launch
 import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.LaunchedEffect
+import com.sfedu.bank_queue_android.viewmodel.UserViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,6 +31,8 @@ fun AppNavHost() {
     val navController = rememberNavController()
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    val vm: UserViewModel = hiltViewModel()
+    val token = vm.token
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -91,14 +95,25 @@ fun AppNavHost() {
         ) { paddingValues ->
             NavHost(
                 navController = navController,
-                startDestination = "create",
+                startDestination = if (token.isNullOrBlank()) "login" else "tickets",
                 modifier = Modifier.padding(paddingValues)
             ) {
-                composable("login") { LoginScreen(nav = navController, onSuccess = { navController.navigateUp() }) }
+                composable("login") {
+                    LoginScreen(
+                        nav = navController,
+                        onSuccess = {
+                            navController.navigate("profile") {
+                                popUpTo("login") { inclusive = true }
+                            }
+                        }
+                    )
+                }
                 composable("register") { RegisterScreen(nav = navController, onSuccess = { navController.navigateUp() }) }
                 composable("create") { CreateTicketScreen(hiltViewModel(), onCreated = { id -> navController.navigate("ticket/$id") }) }
                 composable("tickets") { TicketListScreen(nav = navController, hiltViewModel(), onClick = { id -> navController.navigate("ticket/$id") }) }
-                composable("profile") { ProfileScreen(navController, hiltViewModel())  }
+                composable("profile") {
+                    ProfileScreen(navController, hiltViewModel())
+                }
                 composable( "ticket/{id}") { backStackEntry ->
                     // 1) вытаскиваем сам id
                     val id = backStackEntry.arguments?.getInt("id") ?: return@composable
