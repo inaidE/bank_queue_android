@@ -1,2 +1,69 @@
 package com.sfedu.bank_queue_android.viewmodel
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.sfedu.bank_queue_android.repository.AuthRepository
+import com.sfedu.bank_queue_android.repository.UserRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+/** Состояние экрана авторизации/регистрации */
+sealed class AuthUiState {
+    object Idle    : AuthUiState()
+    object Loading : AuthUiState()
+    object Success : AuthUiState()
+    data class Error(val message: String) : AuthUiState()
+}
+
+@HiltViewModel
+class AuthViewModel @Inject constructor(
+    private val authRepo: AuthRepository,
+    private val userRepo: UserRepository
+) : ViewModel() {
+
+    /** Текущее состояние UI */
+    var uiState: AuthUiState by mutableStateOf(AuthUiState.Idle)
+        private set
+
+    /** Вход (логин) */
+    fun login(username: String, password: String) {
+        viewModelScope.launch {
+            uiState = AuthUiState.Loading
+            authRepo.login(username, password)
+                .fold(
+                    onSuccess = { uiState = AuthUiState.Success },
+                    onFailure = { uiState = AuthUiState.Error(it.message ?: "Ошибка авторизации") }
+                )
+        }
+    }
+
+    /** Регистрация нового пользователя */
+    fun register(
+        name: String,
+        login: String,
+        email: String,
+        password: String,
+        phoneNumber: String
+    ) {
+        viewModelScope.launch {
+            uiState = AuthUiState.Loading
+            userRepo.register(name, login, email, password, phoneNumber)
+                .fold(
+                    onSuccess = { uiState = AuthUiState.Success },
+                    onFailure = { uiState = AuthUiState.Error(it.message ?: "Ошибка регистрации") }
+                )
+        }
+    }
+
+    /** Логаут (очистка токена) */
+    fun logout() {
+        viewModelScope.launch {
+            authRepo.logout()
+            uiState = AuthUiState.Idle
+        }
+    }
+}

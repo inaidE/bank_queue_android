@@ -1,14 +1,33 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
+    id("com.android.application")
+    kotlin("android")
     kotlin("kapt")
-    id("com.google.dagger.hilt.android") version "2.44"
+    id("com.google.dagger.hilt.android")
+}
+
+kotlin {
+    // Пользуемся вашей JDK 17
+    jvmToolchain(17)
+}
+
+tasks.withType<KotlinCompile>().configureEach {
+    kotlinOptions {
+        jvmTarget = "17"
+    }
 }
 
 android {
-    namespace = "com.sfedu.bank_queue_android"
+    namespace = "com.sfedu.bank_queue_android"      // ← ОБЯЗАТЕЛЬНО
     compileSdk = 35
+
+    packagingOptions {
+        resources {
+            // если ты хочешь просто отбросить все дубликаты этого файла:
+            excludes += "META-INF/gradle/incremental.annotation.processors"
+        }
+    }
 
     defaultConfig {
         applicationId = "com.sfedu.bank_queue_android"
@@ -16,41 +35,39 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
     buildFeatures {
         compose = true
+    }
+    composeOptions {
+        // версия Compose Compiler, совместимая с Kotlin 1.8.22
+        kotlinCompilerExtensionVersion = "1.4.8"
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = "17"
     }
 }
 
 dependencies {
     // Core & Compose
+    implementation("androidx.compose.compiler:compiler:1.4.8")
     implementation(libs.androidx.core.ktx.v1101)
     implementation(libs.androidx.activity.compose.v172)
     implementation(libs.ui)
+    implementation(libs.androidx.compose.material3)
     implementation(libs.material3)
     implementation(libs.ui.tooling.preview)
     implementation(libs.androidx.datastore.preferences.core)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.datastore.preferences.v100)
+    implementation(libs.androidx.material3.android)
     debugImplementation(libs.ui.tooling)
 
     // Navigation Compose
@@ -58,7 +75,9 @@ dependencies {
 
     // Hilt
     implementation(libs.hilt.android)
-    implementation(libs.hilt.android.compiler)
+    implementation(libs.androidx.hilt.navigation.compose.v100)
+    kapt(libs.hilt.android.compiler)
+    kapt("androidx.room:room-compiler:2.5.2")
 
     // Retrofit + Gson + Coroutines
     implementation(libs.retrofit)

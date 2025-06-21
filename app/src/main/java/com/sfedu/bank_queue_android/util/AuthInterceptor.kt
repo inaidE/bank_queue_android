@@ -1,11 +1,38 @@
 package com.sfedu.bank_queue_android.util
 
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.stringPreferencesKey
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.Response
 import javax.inject.Inject
+import javax.inject.Singleton
 
-class AuthInterceptor @Inject constructor(): Interceptor {
+/**
+ * Interceptor, который подставляет в каждый HTTP-запрос заголовок
+ * Authorization: Bearer <token>, если токен сохранён в DataStore.
+ */
+@Singleton
+class AuthInterceptor @Inject constructor(
+    private val dataStore: DataStore<Preferences>
+) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
-        TODO("Not yet implemented")
+        val token = runBlocking {
+            dataStore.data
+                .map { prefs -> prefs[stringPreferencesKey("token_key")] }
+                .firstOrNull()
+        }
+
+        val request = chain.request().newBuilder()
+            .apply {
+                if (!token.isNullOrBlank()) {
+                    header("Authorization", "Bearer $token")
+                }
+            }.build()
+
+        return chain.proceed(request)
     }
 }
