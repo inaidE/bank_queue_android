@@ -41,6 +41,13 @@ fun ProfileScreen(
         }
     }
 
+    if (token.isNullOrBlank()) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text("Профиль недоступен. Вы не авторизованы", textAlign = TextAlign.Center)
+        }
+        return
+    }
+
     Box(Modifier.fillMaxSize()) {
         when {
             isLoading -> {

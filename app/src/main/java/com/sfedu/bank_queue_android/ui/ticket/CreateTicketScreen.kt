@@ -30,18 +30,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sfedu.bank_queue_android.viewmodel.TicketViewModel
+import com.sfedu.bank_queue_android.viewmodel.UserViewModel
 import kotlinx.coroutines.delay
-import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
-import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -51,9 +52,18 @@ import java.time.temporal.ChronoUnit
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun CreateTicketScreen(
-    viewModel: TicketViewModel = hiltViewModel(),
+    ticketVm: TicketViewModel = hiltViewModel(),
+    userVm: UserViewModel = hiltViewModel(),
     onCreated: () -> Unit
 ) {
+    val token = userVm.token
+    if (token.isNullOrBlank()) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text("Вы не авторизованы", textAlign = TextAlign.Center)
+        }
+        return
+    }
+
     // Списки опций
     val addresses = listOf(
         "пр. М.Нагибина, 32А",
@@ -93,7 +103,7 @@ fun CreateTicketScreen(
         }
     }
 
-    val isProcessing = viewModel.isProcessing
+    val isProcessing = ticketVm.isProcessing
 
     val scheduledAtIso = remember(date, time) {
         ZonedDateTime
@@ -230,7 +240,7 @@ fun CreateTicketScreen(
         Button(
             onClick = {
                 error = null
-                viewModel.create(address, type, scheduledAtIso) { result ->
+                ticketVm.create(address, type, scheduledAtIso) { result ->
                     result.fold(
                         onSuccess = { onCreated() },
                         onFailure = { error = it.message }
@@ -286,7 +296,7 @@ fun CreateTicketScreen(
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-private fun DatePickerDialog(
+fun DatePickerDialog(
     initial: LocalDate,
     onDismiss: () -> Unit,
     onDateSelected: (LocalDate) -> Unit
@@ -306,7 +316,7 @@ private fun DatePickerDialog(
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-private fun TimeSpinnerPickerDialog(
+fun TimeSpinnerPickerDialog(
     initial: LocalTime,
     onDismiss: () -> Unit,
     onTimeSelected: (LocalTime) -> Unit
