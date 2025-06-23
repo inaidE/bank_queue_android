@@ -65,5 +65,10 @@ fun RegisterScreen(
             Spacer(Modifier.height(8.dp))
             Text((it as AuthUiState.Error).message, color = MaterialTheme.colorScheme.error)
         }
+        Spacer(Modifier.height(16.dp))
+
+        TextButton(onClick = { nav.navigate("login") }) {
+            Text("Уже есть аккаунт? Авторизуйтесь")
+        }
     }
 }

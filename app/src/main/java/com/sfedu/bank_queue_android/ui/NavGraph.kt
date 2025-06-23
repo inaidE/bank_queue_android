@@ -2,7 +2,14 @@ package com.sfedu.bank_queue_android.ui
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
@@ -24,7 +31,11 @@ import com.sfedu.bank_queue_android.ui.ticket.TicketDetailScreen
 import com.sfedu.bank_queue_android.ui.ticket.TicketListScreen
 import kotlinx.coroutines.launch
 import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavType
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.sfedu.bank_queue_android.viewmodel.UserViewModel
 
@@ -41,58 +52,152 @@ fun AppNavHost() {
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            ModalDrawerSheet {
-                Text("Аутентификация")
-                HorizontalDivider()
-                NavigationDrawerItem(
-                    label = { Text("Авторизация") },
-                    selected = false,
-                    onClick = {
-                        scope.launch { drawerState.close() }
-                        navController.navigate("login")
-                    }
-                )
-                NavigationDrawerItem(
-                    label = { Text("Регистрация") },
-                    selected = false,
-                    onClick = {
-                        scope.launch { drawerState.close() }
-                        navController.navigate("register")
-                    }
-                )
+            ModalDrawerSheet(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .widthIn(max = 320.dp)
+            ) {
+                // общий модификатор для пунктов меню
+                val itemModifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp, horizontal = 16.dp)
+                    .border(
+                        BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceColorAtElevation(50.dp)),
+                        shape = MaterialTheme.shapes.small
+                    )
+
+                if (!token.isNullOrBlank()) {
+                    // если уже авторизованы
+                    Text(
+                        "Вы уже авторизованы",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 12.dp),
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    NavigationDrawerItem(
+                        label = {
+                            Text(
+                                "Выйти",
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Center
+                            )
+                        },
+                        selected = false,
+                        onClick = {
+                            scope.launch { drawerState.close() }
+                            // здесь ваш метод логаута в UserViewModel
+                            vm.logout(){}
+                            navController.navigate("login") {
+                                popUpTo("tickets") { inclusive = true }
+                            }
+                        },
+                        modifier = itemModifier
+                    )
+                } else {
+                    // если не авторизованы
+                    Text(
+                        "Аутентификация",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 12.dp),
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    NavigationDrawerItem(
+                        label = {
+                            Text(
+                                "Авторизация",
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Center
+                            )
+                        },
+                        selected = false,
+                        onClick = {
+                            scope.launch { drawerState.close() }
+                            navController.navigate("login")
+                        },
+                        modifier = itemModifier
+                    )
+                    NavigationDrawerItem(
+                        label = {
+                            Text(
+                                "Регистрация",
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Center
+                            )
+                        },
+                        selected = false,
+                        onClick = {
+                            scope.launch { drawerState.close() }
+                            navController.navigate("register")
+                        },
+                        modifier = itemModifier
+                    )
+                }
             }
         }
     ) {
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("Банковская очередь") },
-                    actions = {
-                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                            Icon(Icons.Default.Menu, contentDescription = "Menu")
+                    navigationIcon = {
+                        Surface(
+                            tonalElevation = 0.dp,
+                            shape = MaterialTheme.shapes.small,
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceColorAtElevation(50.dp)),
+                            modifier = Modifier.padding(start = 8.dp)
+                        ) {
+                            IconButton(
+                                onClick = { scope.launch { drawerState.open() } }
+                            ) {
+                                Icon(
+                                    Icons.Default.Menu,
+                                    contentDescription = "Menu"
+                                )
+                            }
                         }
-                    }
+                    },
+                    title = { Text("Банковская очередь") },
+                    actions = {}
                 )
             },
             bottomBar = {
+                val navBackStack by navController.currentBackStackEntryAsState()
+                val currentRoute = navBackStack?.destination?.route?.substringBefore("/")
                 NavigationBar {
                     NavigationBarItem(
                         icon = { Icon(Icons.Default.Add, contentDescription = "Create") },
                         label = { Text("Создать тикет") },
-                        selected = false,
-                        onClick = { navController.navigate("create") }
+                        selected = currentRoute == "create",
+                        onClick = {
+                            if (currentRoute != "create") {
+                                navController.navigate("create")
+                            }
+                        }
                     )
                     NavigationBarItem(
                         icon = { Icon(Icons.Default.List, contentDescription = "Tickets") },
                         label = { Text("Мои тикеты") },
-                        selected = false,
-                        onClick = { navController.navigate("tickets") }
+                        selected = currentRoute == "tickets",
+                        onClick = {
+                            if (currentRoute != "tickets") {
+                                navController.navigate("tickets")
+                            }
+                        }
                     )
                     NavigationBarItem(
                         icon = { Icon(Icons.Default.AccountCircle, contentDescription = "Profile") },
                         label = { Text("Профиль") },
-                        selected = false,
-                        onClick = { navController.navigate("profile") }
+                        selected = currentRoute == "profile",
+                        onClick = {
+                            if (currentRoute != "profile") {
+                                navController.navigate("profile")
+                            }
+                        }
                     )
                 }
             }
