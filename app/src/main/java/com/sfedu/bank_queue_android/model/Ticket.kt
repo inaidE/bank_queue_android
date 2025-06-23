@@ -1,6 +1,6 @@
 package com.sfedu.bank_queue_android.model
 
-import java.time.Instant
+import java.time.OffsetDateTime
 
 data class Ticket(
     val id: Long?,
@@ -8,6 +8,6 @@ data class Ticket(
     val address: String,
     val ticketType: String,
     val ticket: String,
-    val scheduledAt: Instant
+    val scheduledAt: OffsetDateTime
     //TODO в backend: val status: String по типу open/closed
 )

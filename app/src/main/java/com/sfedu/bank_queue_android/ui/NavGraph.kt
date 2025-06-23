@@ -1,5 +1,7 @@
 package com.sfedu.bank_queue_android.ui
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
@@ -22,9 +24,11 @@ import com.sfedu.bank_queue_android.ui.ticket.TicketDetailScreen
 import com.sfedu.bank_queue_android.ui.ticket.TicketListScreen
 import kotlinx.coroutines.launch
 import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.LaunchedEffect
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import com.sfedu.bank_queue_android.viewmodel.UserViewModel
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppNavHost() {
@@ -38,10 +42,10 @@ fun AppNavHost() {
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet {
-                Text("Auth")
+                Text("Аутентификация")
                 HorizontalDivider()
                 NavigationDrawerItem(
-                    label = { Text("Login") },
+                    label = { Text("Авторизация") },
                     selected = false,
                     onClick = {
                         scope.launch { drawerState.close() }
@@ -49,7 +53,7 @@ fun AppNavHost() {
                     }
                 )
                 NavigationDrawerItem(
-                    label = { Text("Register") },
+                    label = { Text("Регистрация") },
                     selected = false,
                     onClick = {
                         scope.launch { drawerState.close() }
@@ -62,7 +66,7 @@ fun AppNavHost() {
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("Bank Queue") },
+                    title = { Text("Банковская очередь") },
                     actions = {
                         IconButton(onClick = { scope.launch { drawerState.open() } }) {
                             Icon(Icons.Default.Menu, contentDescription = "Menu")
@@ -74,19 +78,19 @@ fun AppNavHost() {
                 NavigationBar {
                     NavigationBarItem(
                         icon = { Icon(Icons.Default.Add, contentDescription = "Create") },
-                        label = { Text("Create") },
+                        label = { Text("Создать тикет") },
                         selected = false,
                         onClick = { navController.navigate("create") }
                     )
                     NavigationBarItem(
                         icon = { Icon(Icons.Default.List, contentDescription = "Tickets") },
-                        label = { Text("Tickets") },
+                        label = { Text("Мои тикеты") },
                         selected = false,
                         onClick = { navController.navigate("tickets") }
                     )
                     NavigationBarItem(
                         icon = { Icon(Icons.Default.AccountCircle, contentDescription = "Profile") },
-                        label = { Text("Profile") },
+                        label = { Text("Профиль") },
                         selected = false,
                         onClick = { navController.navigate("profile") }
                     )
@@ -109,15 +113,18 @@ fun AppNavHost() {
                     )
                 }
                 composable("register") { RegisterScreen(nav = navController, onSuccess = { navController.navigateUp() }) }
-                composable("create") { CreateTicketScreen(hiltViewModel(), onCreated = { id -> navController.navigate("ticket/$id") }) }
-                composable("tickets") { TicketListScreen(nav = navController, hiltViewModel(), onClick = { id -> navController.navigate("ticket/$id") }) }
+                composable("create") { CreateTicketScreen(hiltViewModel(), onCreated = { navController.navigate("tickets") }) }
+                composable("tickets") { TicketListScreen(
+                    hiltViewModel(),
+                    onClick = { id -> navController.navigate("ticket/$id") }) }
                 composable("profile") {
                     ProfileScreen(navController, hiltViewModel())
                 }
-                composable( "ticket/{id}") { backStackEntry ->
-                    // 1) вытаскиваем сам id
-                    val id = backStackEntry.arguments?.getInt("id") ?: return@composable
-                    // 2) сразу передаём в экран чистое число и, при желании, navController
+                composable(
+                    route = "ticket/{id}",
+                    arguments = listOf(navArgument("id") { type = NavType.IntType })
+                ) { backStackEntry ->
+                    val id = backStackEntry.arguments?.getInt("id")!!
                     TicketDetailScreen(
                         id = id,
                         nav = navController,

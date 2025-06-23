@@ -31,13 +31,13 @@ fun LoginScreen(
     }
 
     Column(Modifier.padding(16.dp)) {
-        Text("Login", style = MaterialTheme.typography.titleLarge)
+        Text("Авторизация", style = MaterialTheme.typography.titleLarge)
         Spacer(Modifier.height(8.dp))
 
         OutlinedTextField(
             value = login,
             onValueChange = { login = it },
-            label = { Text("Username or Email") },
+            label = { Text("login или email") },
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
@@ -47,7 +47,7 @@ fun LoginScreen(
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text("Password") },
+            label = { Text("Пароль") },
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             singleLine = true,
@@ -64,7 +64,7 @@ fun LoginScreen(
             if (uiState is AuthUiState.Loading) {
                 CircularProgressIndicator(modifier = Modifier.size(24.dp))
             } else {
-                Text("Sign In")
+                Text("Войти")
             }
         }
 
@@ -81,7 +81,7 @@ fun LoginScreen(
         Spacer(Modifier.height(16.dp))
 
         TextButton(onClick = { nav.navigate("register") }) {
-            Text("Don't have an account? Register")
+            Text("Нет аккаунта? Зарегистрируйтесь")
         }
     }
 }

@@ -33,10 +33,10 @@ fun RegisterScreen(
     }
 
     Column(Modifier.padding(16.dp)) {
-        Text("Register", style = MaterialTheme.typography.titleLarge)
+        Text("Регистрация", style = MaterialTheme.typography.titleLarge)
         Spacer(Modifier.height(8.dp))
         // аналогично полям выше: TextField для name, login, email, password, phone
-        OutlinedTextField(name, { name = it }, label = { Text("Name") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(name, { name = it }, label = { Text("ФИО") }, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(8.dp))
         OutlinedTextField(login, { login = it }, label = { Text("Login") }, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(8.dp))
@@ -44,12 +44,12 @@ fun RegisterScreen(
         Spacer(Modifier.height(8.dp))
         OutlinedTextField(
             password, { password = it },
-            label = { Text("Password") },
+            label = { Text("Пароль") },
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(Modifier.height(8.dp))
-        OutlinedTextField(phone, { phone = it }, label = { Text("Phone") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(phone, { phone = it }, label = { Text("Номер телефона") }, modifier = Modifier.fillMaxWidth())
 
         Spacer(Modifier.height(16.dp))
         Button(
@@ -59,7 +59,7 @@ fun RegisterScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             if (uiState is AuthUiState.Loading) CircularProgressIndicator(Modifier.size(24.dp))
-            else Text("Sign Up")
+            else Text("Зарегистрироваться")
         }
         uiState.takeIf { it is AuthUiState.Error }?.let {
             Spacer(Modifier.height(8.dp))

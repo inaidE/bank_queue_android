@@ -1,90 +1,328 @@
 package com.sfedu.bank_queue_android.ui.ticket
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sfedu.bank_queue_android.viewmodel.TicketViewModel
+import kotlinx.coroutines.delay
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.OffsetDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
+@OptIn(ExperimentalMaterial3Api::class)
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun CreateTicketScreen(
     viewModel: TicketViewModel = hiltViewModel(),
-    onCreated: (Int) -> Unit
+    onCreated: () -> Unit
 ) {
-    var address by remember { mutableStateOf("") }
-    var type by remember { mutableStateOf("") }
-    var scheduledAt by remember { mutableStateOf("") }
-    var error by remember { mutableStateOf<String?>(null) }
+    // Списки опций
+    val addresses = listOf(
+        "пр. М.Нагибина, 32А",
+        "пр. Соколова, 62",
+        "пр.Буденновский, 97"
+    )
+    val types = listOf("Вклад", "Кредит", "Карты", "Инвестиции", "Счета")
 
-    // берём флаг обработки из ViewModel
-    val isProcessing by remember { derivedStateOf { viewModel.isProcessing } }
+    // Состояния
+    var address by rememberSaveable { mutableStateOf(addresses.first()) }
+    var type    by rememberSaveable { mutableStateOf(types.first()) }
 
-    Column(modifier = Modifier
-        .fillMaxSize()
-        .padding(16.dp)
+    val zoneMoscow = ZoneId.of("Europe/Moscow")
+    var date by rememberSaveable {
+        mutableStateOf(LocalDate.now(zoneMoscow))
+    }
+    var time by rememberSaveable {
+        mutableStateOf(
+            LocalTime.now(zoneMoscow)
+                .truncatedTo(ChronoUnit.MINUTES)
+                .coerceIn(LocalTime.of(8, 0), LocalTime.of(17, 0))
+        )
+    }
+
+    var expandedAddress by remember { mutableStateOf(false) }
+    var expandedType    by remember { mutableStateOf(false) }
+    var showDatePicker  by remember { mutableStateOf(false) }
+    var showTimePicker  by remember { mutableStateOf(false) }
+    var error           by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(error) {
+        if (error != null) {
+            // ждём 5 секунд
+            delay(5_000L)
+            // сбрасываем ошибку
+            error = null
+        }
+    }
+
+    val isProcessing = viewModel.isProcessing
+
+    val scheduledAtIso = remember(date, time) {
+        ZonedDateTime
+            .of(date, time, zoneMoscow)
+            .toOffsetDateTime()
+            .truncatedTo(ChronoUnit.MINUTES)
+            .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+    }
+
+    Column(
+        Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text("Create Ticket", style = MaterialTheme.typography.titleLarge)
+        Text("Создать тикет", style = MaterialTheme.typography.titleLarge)
+
+        // 1) Address — выпадающий список
+        ExposedDropdownMenuBox(
+            expanded = expandedAddress,
+            onExpandedChange = { expandedAddress = !expandedAddress }
+        ) {
+            OutlinedTextField(
+                value = address,
+                onValueChange = { },
+                label = { Text("Адрес отделения") },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedAddress) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor()
+            )
+            ExposedDropdownMenu(
+                expanded = expandedAddress,
+                onDismissRequest = { expandedAddress = false }
+            ) {
+                addresses.forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(option) },
+                        onClick = {
+                            address = option
+                            expandedAddress = false
+                        }
+                    )
+                }
+            }
+        }
+
+        // 2) Ticket Type — тоже выпадающий список
+        ExposedDropdownMenuBox(
+            expanded = expandedType,
+            onExpandedChange = { expandedType = !expandedType }
+        ) {
+            OutlinedTextField(
+                value = type,
+                onValueChange = { },
+                label = { Text("Тип тикета") },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedType) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor()
+            )
+            ExposedDropdownMenu(
+                expanded = expandedType,
+                onDismissRequest = { expandedType = false }
+            ) {
+                types.forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(option) },
+                        onClick = {
+                            type = option
+                            expandedType = false
+                        }
+                    )
+                }
+            }
+        }
+
+        val dateFormatter = remember { DateTimeFormatter.ofPattern("dd.MM.yyyy") }
+
+        // 3) Scheduled Date
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+        ) {
+            OutlinedTextField(
+                value = date.format(dateFormatter),
+                onValueChange = { },
+                label = { Text("Дата приема") },
+                readOnly = true,
+                enabled = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(
+                Modifier
+                    .matchParentSize()
+                    // чтобы он точно лежал над TextField
+                    .zIndex(1f)
+                    // и пропускал фоновый ripple, если нужно
+                    .background(Color.Transparent)
+                    .clickable { showDatePicker = true }
+            )
+        }
+
+        val timeFormatter = remember { DateTimeFormatter.ofPattern("HH:mm") }
+
+        // 4) Scheduled Time
+        Box(Modifier.fillMaxWidth()) {
+            OutlinedTextField(
+                value    = time.format(timeFormatter),
+                onValueChange = {},
+                label    = { Text("Время приёма") },
+                readOnly = true,
+                enabled  = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+            // Этот Spacer лежит поверх TextField и перехватит нажатие
+            Spacer(
+                Modifier
+                    .matchParentSize()
+                    // чтобы он точно лежал над TextField
+                    .zIndex(1f)
+                    // и пропускал фоновый ripple, если нужно
+                    .background(Color.Transparent)
+                    .clickable { showTimePicker = true }
+            )
+        }
+
         Spacer(Modifier.height(8.dp))
 
-        OutlinedTextField(
-            value = address,
-            onValueChange = { address = it },
-            label = { Text("Address") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = type,
-            onValueChange = { type = it },
-            label = { Text("Ticket Type") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = scheduledAt,
-            onValueChange = { scheduledAt = it },
-            label = { Text("Scheduled At") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(Modifier.height(16.dp))
-
+        // Кнопка Create
         Button(
             onClick = {
                 error = null
-                viewModel.create(address, type, scheduledAt) { result ->
+                viewModel.create(address, type, scheduledAtIso) { result ->
                     result.fold(
-                        onSuccess = { ticket ->
-                            ticket.id?.let { onCreated(it.toInt()) }
-                        },
-                        onFailure = {
-                            error = it.message
-                        }
+                        onSuccess = { onCreated() },
+                        onFailure = { error = it.message }
                     )
                 }
             },
             modifier = Modifier.fillMaxWidth(),
-            enabled = !isProcessing
+            enabled = address.isNotBlank() && type.isNotBlank() && !isProcessing
         ) {
             if (isProcessing) {
                 CircularProgressIndicator(
-                    modifier = Modifier
+                    Modifier
                         .size(24.dp)
                         .padding(end = 8.dp),
                     strokeWidth = 2.dp
                 )
-                Text("Creating…")
+                Text("Создание…")
             } else {
-                Text("Create")
+                Text("Создать")
             }
         }
 
-        error?.let {
-            Spacer(Modifier.height(8.dp))
-            Text(it, color = MaterialTheme.colorScheme.error)
-        }
+        error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+    }
+
+    // Диалоги выбора
+    if (showDatePicker) {
+        DatePickerDialog(
+            initial = date,
+            onDismiss = { showDatePicker = false },
+            onDateSelected = {
+                date = it
+                showDatePicker = false
+            }
+        )
+    }
+    if (showTimePicker) {
+        TimeSpinnerPickerDialog(
+            initial = time,
+            onDismiss = { showTimePicker = false },
+            onTimeSelected = { selected ->
+                // если вышло за рамки — игнорируем или показываем ошибку
+                if (selected in LocalTime.of(8,0)..LocalTime.of(17,0)) {
+                    time = selected
+                    showTimePicker = false
+                } else {
+                    error = "Запись только между 08:00 и 17:00"
+                }
+            }
+        )
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+private fun DatePickerDialog(
+    initial: LocalDate,
+    onDismiss: () -> Unit,
+    onDateSelected: (LocalDate) -> Unit
+) {
+    val context = LocalContext.current
+    DisposableEffect(Unit) {
+        val dlg = android.app.DatePickerDialog(
+            context,
+            { _, y, m, d -> onDateSelected(LocalDate.of(y, m + 1, d)) },
+            initial.year, initial.monthValue - 1, initial.dayOfMonth
+        )
+        dlg.setOnDismissListener { onDismiss() }
+        dlg.show()
+        onDispose { dlg.dismiss() }
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+private fun TimeSpinnerPickerDialog(
+    initial: LocalTime,
+    onDismiss: () -> Unit,
+    onTimeSelected: (LocalTime) -> Unit
+) {
+    val context = LocalContext.current
+    DisposableEffect(Unit) {
+        // Тема Holo Spinner
+        val dlg = android.app.TimePickerDialog(
+            context,
+            android.R.style.Theme_Holo_Light_Dialog_MinWidth,
+            { _, h, m -> onTimeSelected(LocalTime.of(h, m)) },
+            initial.hour, initial.minute,
+            true // 24-hour
+        )
+        dlg.setOnDismissListener { onDismiss() }
+        dlg.show()
+        onDispose { dlg.dismiss() }
     }
 }

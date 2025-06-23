@@ -9,12 +9,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
 import com.sfedu.bank_queue_android.viewmodel.TicketViewModel
 
 @Composable
 fun TicketListScreen(
-    nav: NavController,
     vm: TicketViewModel = hiltViewModel(),
     onClick: (Int) -> Unit
 ) {
@@ -30,7 +28,7 @@ fun TicketListScreen(
                 Modifier
                     .fillMaxWidth()
                     .padding(8.dp)
-                    .clickable { nav.navigate("ticket/${t.id}") }
+                    .clickable { onClick(t.id!!.toInt()) }
             ) {
                 Column(Modifier.padding(16.dp)) {
                     Text("№ ${t.ticket}", style = MaterialTheme.typography.titleMedium)
