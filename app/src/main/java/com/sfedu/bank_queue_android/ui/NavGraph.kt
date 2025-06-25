@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
@@ -37,6 +38,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavType
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
+import com.sfedu.bank_queue_android.ui.profile.ChangePasswordScreen
+import com.sfedu.bank_queue_android.ui.profile.EditProfileScreen
 import com.sfedu.bank_queue_android.viewmodel.UserViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -149,7 +152,7 @@ fun AppNavHost() {
                             tonalElevation = 0.dp,
                             shape = MaterialTheme.shapes.small,
                             border = BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceColorAtElevation(50.dp)),
-                            modifier = Modifier.padding(start = 8.dp)
+                            modifier = Modifier.padding(start = 8.dp).requiredSize(35.dp)
                         ) {
                             IconButton(
                                 onClick = { scope.launch { drawerState.open() } }
@@ -224,6 +227,24 @@ fun AppNavHost() {
                     onClick = { id -> navController.navigate("ticket/$id") }) }
                 composable("profile") {
                     ProfileScreen(navController, hiltViewModel())
+                }
+                composable("profile/edit") {
+                    EditProfileScreen(
+                        vm = hiltViewModel(),         // UserViewModel
+                        onSaved = { navController.popBackStack()
+                                    vm.loadProfile()
+                                  },
+                        onCancel = { navController.popBackStack() }
+                    )
+                }
+
+                // экран смены пароля
+                composable("profile/change-password") {
+                    ChangePasswordScreen(
+                        vm = hiltViewModel(),
+                        onSaved = { navController.popBackStack() },
+                        onCancel = { navController.popBackStack() }
+                    )
                 }
                 composable(
                     route = "ticket/{id}",

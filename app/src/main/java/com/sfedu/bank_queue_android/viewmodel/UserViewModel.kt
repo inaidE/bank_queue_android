@@ -21,11 +21,11 @@ class UserViewModel @Inject constructor(
 ) : ViewModel() {
     var token by mutableStateOf<String?>(null); private set
     var profile by mutableStateOf<User?>(null); private set
+    var isProcessing by mutableStateOf(false); private set
     var isLoadingProfile by mutableStateOf(false); private set
     var errorMessage by mutableStateOf<String?>(null); private set
 
     init {
-        // Просто собираем токен — loadProfile() будет вызываться из UI
         viewModelScope.launch {
             auth.getToken()
                 .distinctUntilChanged()
@@ -54,6 +54,34 @@ class UserViewModel @Inject constructor(
                 }
 
             isLoadingProfile = false
+        }
+    }
+
+    fun updateProfile(
+        name: String,
+        email: String,
+        phone: String,
+        onResult: (Result<User>) -> Unit
+    ) {
+        viewModelScope.launch {
+            isProcessing = true
+            val res = userRepo.updateProfile(name, email, phone)
+            onResult(res)
+            isProcessing = false
+        }
+    }
+
+    fun changePassword(
+        oldPwd: String,
+        newPwd: String,
+        confPwd: String,
+        onResult: (Result<Unit>) -> Unit
+    ) {
+        viewModelScope.launch {
+            isProcessing = true
+            val res = userRepo.changePassword(oldPwd, newPwd, confPwd)
+            onResult(res)
+            isProcessing = false
         }
     }
 

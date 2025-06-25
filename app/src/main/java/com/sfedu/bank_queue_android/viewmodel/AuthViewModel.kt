@@ -37,8 +37,7 @@ class AuthViewModel @Inject constructor(
             uiState = AuthUiState.Loading
             runCatching {
                 val resp = remote.login(AuthRequest(username, password))
-                // СОХРАНЯЕМ токен сразу
-                authRepo.login(username, password) // <- теперь ваша реализация возвращает токен
+                authRepo.login(username, password)
                 resp.token
             }.onSuccess { token ->
                 uiState = AuthUiState.Success
