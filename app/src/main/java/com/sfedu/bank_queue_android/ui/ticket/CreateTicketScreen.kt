@@ -1,6 +1,10 @@
 package com.sfedu.bank_queue_android.ui.ticket
 
+import android.app.AlertDialog
+import android.content.res.Resources
 import android.os.Build
+import android.widget.NumberPicker
+import android.widget.TimePicker
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -323,14 +327,46 @@ fun TimeSpinnerPickerDialog(
 ) {
     val context = LocalContext.current
     DisposableEffect(Unit) {
-        // Тема Holo Spinner
+        // 1) создаём диалог без слушателя
         val dlg = android.app.TimePickerDialog(
             context,
             android.R.style.Theme_Holo_Light_Dialog_MinWidth,
-            { _, h, m -> onTimeSelected(LocalTime.of(h, m)) },
-            initial.hour, initial.minute,
-            true // 24-hour
+            null,
+            initial.hour,
+            initial.minute / 15,
+            true
         )
+
+        // 2) подменяем спиннер минут и перехватываем OK
+        dlg.setOnShowListener {
+            // a) находим внутренний TimePicker
+            @Suppress("DiscouragedPrivateApi")
+            val timePickerId = Resources.getSystem()
+                .getIdentifier("timePicker", "id", "android")
+            val tp = dlg.findViewById<TimePicker>(timePickerId)!!
+
+            // b) находим NumberPicker минут
+            @Suppress("DiscouragedPrivateApi")
+            val minutePickerId = Resources.getSystem()
+                .getIdentifier("minute", "id", "android")
+            val minutePicker = tp.findViewById<NumberPicker>(minutePickerId)!!
+
+            // c) настраиваем шаг 15 минут
+            minutePicker.minValue = 0
+            minutePicker.maxValue = 3
+            minutePicker.displayedValues = arrayOf("00","15","30","45")
+            minutePicker.wrapSelectorWheel = true
+
+            // d) перехватываем нажатие кнопки OK
+            //    здесь используем android.app.AlertDialog.BUTTON_POSITIVE
+            dlg.getButton(android.app.AlertDialog.BUTTON_POSITIVE)
+                .setOnClickListener {
+                    val minute = minutePicker.value * 15
+                    onTimeSelected(LocalTime.of(tp.hour, minute))
+                    dlg.dismiss()
+                }
+        }
+
         dlg.setOnDismissListener { onDismiss() }
         dlg.show()
         onDispose { dlg.dismiss() }
