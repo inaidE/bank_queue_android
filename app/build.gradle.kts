@@ -99,5 +99,29 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.logging.interceptor)
 
+    // Unit tests
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("io.mockk:mockk:1.13.2")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.0")
 
+    // Instrumentation tests
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    // Для Compose UI-тестов
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:<compose-version>")
+    testImplementation(kotlin("test"))
+
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("io.mockk:mockk:1.13.2")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.0")
+
+    // — для сетевых тестов с MockWebServer:
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.9.3")
+    // — если вы используете Moshi как JSON-конвертер:
+    testImplementation("com.squareup.moshi:moshi:1.14.0")
+    testImplementation("com.squareup.retrofit2:converter-moshi:2.9.0")
+    // — если вы используете Gson:
+    // testImplementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    // — сама библиотека Retrofit нужна, если вы напрямую создаёте Retrofit-экземпляр в тестах:
+    testImplementation("com.squareup.retrofit2:retrofit:2.9.0")
 }

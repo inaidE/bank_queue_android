@@ -30,7 +30,6 @@ class AuthViewModel @Inject constructor(
 
     /** Текущее состояние UI */
     var uiState by mutableStateOf<AuthUiState>(AuthUiState.Idle)
-        private set
 
     fun login(username: String, password: String) {
         viewModelScope.launch {

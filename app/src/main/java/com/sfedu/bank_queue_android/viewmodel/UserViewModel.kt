@@ -20,7 +20,7 @@ class UserViewModel @Inject constructor(
     private val auth: AuthRepository
 ) : ViewModel() {
     var token by mutableStateOf<String?>(null); private set
-    var profile by mutableStateOf<User?>(null); private set
+    var profile by mutableStateOf<User?>(null);
     var isProcessing by mutableStateOf(false); private set
     var isLoadingProfile by mutableStateOf(false); private set
     var errorMessage by mutableStateOf<String?>(null); private set
