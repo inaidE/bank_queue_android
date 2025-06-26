@@ -37,75 +37,95 @@ class AuthViewModelTest {
         Dispatchers.resetMain()
     }
 
+    /**
+     * Сценарий: успешный логин
+     * Должен установить uiState = Success
+     */
     @Test
     fun login_success_sets_Success_state() = runTest {
-        // Arrange
+        // GIVEN: remoteDataSource возвращает валидный токен и authRepo успешно сохраняет его
         val token = "tok123"
         coEvery { remoteDataSource.login(AuthRequest("u", "p")) } returns AuthResponse(token)
         coEvery { authRepo.login("u", "p") } returns Result.success(token)
 
-        // Act
+        // WHEN: вызываем метод login
         viewModel.login("u", "p")
         advanceUntilIdle()
 
-        // Assert
+        // THEN: uiState переходит в Success
         assertTrue(viewModel.uiState is AuthUiState.Success)
     }
 
+    /**
+     * Сценарий: неуспешный логин (ошибка сети или неверные креды)
+     * Должен установить uiState = Error с сообщением исключения
+     */
     @Test
     fun login_failure_sets_Error_state_with_message() = runTest {
-        // Arrange
+        // GIVEN: remoteDataSource бросает RuntimeException("bad creds")
         coEvery { remoteDataSource.login(any()) } throws RuntimeException("bad creds")
 
-        // Act
+        // WHEN: пытаемся залогиниться
         viewModel.login("user", "pass")
         advanceUntilIdle()
 
-        // Assert
+        // THEN: uiState = Error, message == "bad creds"
         val state = viewModel.uiState
         assertTrue(state is AuthUiState.Error)
         assertEquals("bad creds", (state as AuthUiState.Error).message)
     }
 
+    /**
+     * Сценарий: успешная регистрация
+     * Должен установить uiState = Success
+     */
     @Test
     fun register_success_sets_Success_state() = runTest {
-        // Arrange
+        // GIVEN: userRepo.register возвращает Result.success(Unit)
         coEvery { userRepo.register("Name", "login", "e@mail", "pwd", "123") } returns Result.success(Unit)
 
-        // Act
+        // WHEN: вызываем метод register
         viewModel.register("Name", "login", "e@mail", "pwd", "123")
         advanceUntilIdle()
 
-        // Assert
+        // THEN: uiState = Success
         assertTrue(viewModel.uiState is AuthUiState.Success)
     }
 
+    /**
+     * Сценарий: неуспешная регистрация
+     * Должен установить uiState = Error с сообщением исключения
+     */
     @Test
     fun register_failure_sets_Error_state_with_message() = runTest {
-        // Arrange
+        // GIVEN: userRepo.register возвращает Result.failure(Exception("no register"))
         coEvery { userRepo.register(any(), any(), any(), any(), any()) } returns Result.failure(Exception("no register"))
 
-        // Act
+        // WHEN: пытаемся зарегистрироваться
         viewModel.register("N", "L", "E", "P", "M")
         advanceUntilIdle()
 
-        // Assert
+        // THEN: uiState = Error, message == "no register"
         val state = viewModel.uiState
         assertTrue(state is AuthUiState.Error)
         assertEquals("no register", (state as AuthUiState.Error).message)
     }
 
+    /**
+     * Сценарий: выход из аккаунта
+     * Должен вызвать authRepo.logout() и сбросить uiState в Idle
+     */
     @Test
     fun logout_resets_to_Idle_state() = runTest {
-        // Arrange
+        // GIVEN: authRepo.logout возвращает Result.success и исходное состояние != Idle
         coEvery { authRepo.logout() } returns Result.success(Unit)
         viewModel.uiState = AuthUiState.Success
 
-        // Act
+        // WHEN: вызываем метод logout
         viewModel.logout()
         advanceUntilIdle()
 
-        // Assert
+        // THEN: uiState = Idle и logout() вызвался ровно один раз
         assertTrue(viewModel.uiState is AuthUiState.Idle)
         coVerify(exactly = 1) { authRepo.logout() }
     }
