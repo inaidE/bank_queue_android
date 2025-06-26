@@ -72,7 +72,7 @@ class AuthViewModelTest {
         // THEN: uiState = Error, message == "bad creds"
         val state = viewModel.uiState
         assertTrue(state is AuthUiState.Error)
-        assertEquals("bad creds", (state as AuthUiState.Error).message)
+        assertEquals("Ошибка авторизации! Проверьте правильность заполнения формы", (state as AuthUiState.Error).message)
     }
 
     /**
@@ -108,7 +108,7 @@ class AuthViewModelTest {
         // THEN: uiState = Error, message == "no register"
         val state = viewModel.uiState
         assertTrue(state is AuthUiState.Error)
-        assertEquals("no register", (state as AuthUiState.Error).message)
+        assertEquals("Ошибка регистрации! Проверьте правильность заполнения формы", (state as AuthUiState.Error).message)
     }
 
     /**
