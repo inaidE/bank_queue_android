@@ -41,7 +41,7 @@ class AuthViewModel @Inject constructor(
             }.onSuccess { token ->
                 uiState = AuthUiState.Success
             }.onFailure {
-                uiState = AuthUiState.Error(it.message ?: "Ошибка")
+                uiState = AuthUiState.Error("Ошибка авторизации! Проверьте правильность заполнения формы")
             }
         }
     }
@@ -59,7 +59,7 @@ class AuthViewModel @Inject constructor(
             userRepo.register(name, login, email, password, phoneNumber)
                 .fold(
                     onSuccess = { uiState = AuthUiState.Success },
-                    onFailure = { uiState = AuthUiState.Error(it.message ?: "Ошибка регистрации") }
+                    onFailure = { uiState = AuthUiState.Error("Ошибка регистрации! Проверьте правильность заполнения формы") }
                 )
         }
     }

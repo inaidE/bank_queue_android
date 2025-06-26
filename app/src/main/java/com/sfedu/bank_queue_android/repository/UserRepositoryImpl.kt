@@ -49,13 +49,12 @@ class UserRepositoryImpl @Inject constructor(
         newPassword: String,
         confirmPassword: String
     ): Result<Unit> = runCatching {
-        remote.changePassword(
-            ChangePasswordDto(
-                currentPassword = oldPassword,
-                newPassword     = newPassword,
-                confirmPassword = confirmPassword
-            )
+        val resp = remote.changePassword(
+            ChangePasswordDto(oldPassword, newPassword, confirmPassword)
         )
+        if (!resp.isSuccessful) {
+            throw retrofit2.HttpException(resp)
+        }
         Unit
     }
 

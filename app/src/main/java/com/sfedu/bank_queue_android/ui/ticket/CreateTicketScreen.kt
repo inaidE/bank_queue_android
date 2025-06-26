@@ -247,7 +247,7 @@ fun CreateTicketScreen(
                 ticketVm.create(address, type, scheduledAtIso) { result ->
                     result.fold(
                         onSuccess = { onCreated() },
-                        onFailure = { error = it.message }
+                        onFailure = { error = "Ошибка создания тикета"}
                     )
                 }
             },

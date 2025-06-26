@@ -222,7 +222,7 @@ fun EditProfileScreen(
                                 vm.loadProfile()
                                 onSaved()
                             }
-                            .onFailure { error = it.message }
+                            .onFailure { error = "Ошибка редактирования профиля" }
                     }
                 },
                 modifier = Modifier.weight(1f),
@@ -295,7 +295,7 @@ fun ChangePasswordScreen(
                         result
                             .onSuccess { onSaved() }
                             .onFailure {
-                                error = it.message
+                                error = "Ошибка смены пароля"
                                 Log.d("ChangePwd", "change failed, exception = ${it::class.simpleName}, message=${it.message}")
                             }
                     }

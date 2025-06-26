@@ -241,7 +241,7 @@ fun TicketDetailScreen(
                 ) { result ->
                     result.fold(
                         onSuccess = { nav.popBackStack() },
-                        onFailure = { error = it.message }
+                        onFailure = { error = "Ошибка обновления тикета" }
                     )
                     isProcessing = false
                 }
@@ -262,7 +262,7 @@ fun TicketDetailScreen(
                 vm.delete(ticket.id!!.toInt()) { res ->
                     res.fold(
                         onSuccess = { nav.popBackStack() },
-                        onFailure = { error = it.message }
+                        onFailure = { error = "Ошибка удаления тикета" }
                     )
                 }
             },

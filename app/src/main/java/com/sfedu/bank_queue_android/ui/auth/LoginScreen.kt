@@ -37,7 +37,7 @@ fun LoginScreen(
         OutlinedTextField(
             value = login,
             onValueChange = { login = it },
-            label = { Text("login или email") },
+            label = { Text("login") },
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )

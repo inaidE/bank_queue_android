@@ -34,8 +34,8 @@ object NetworkModule {
         logging: HttpLoggingInterceptor,
         authInterceptor: AuthInterceptor
     ): OkHttpClient = OkHttpClient.Builder()
-        .addInterceptor(logging)
         .addInterceptor(authInterceptor)
+        .addInterceptor(logging)
         .build()
 
     @Provides @Singleton
